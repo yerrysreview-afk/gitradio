@@ -178,7 +178,7 @@
             margin: 0.5rem 0;
         }
 
-        .upload-label, .rtmp-label {
+        .upload-label, .rtmp-label, .url-label {
             display: block;
             margin: 12px 0 4px;
             font-size: 0.7rem;
@@ -206,7 +206,22 @@
             box-shadow: 0 0 8px cyan;
             border-color: #0ff;
         }
-
+        .stream-on-btn {
+            background: linear-gradient(90deg, #00aa88, #0066aa);
+            color: white;
+            text-shadow: 0 0 4px cyan;
+            margin-top: 12px;
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+        .stream-on-btn.streaming-active {
+            background: linear-gradient(90deg, #ff3366, #cc0044);
+            animation: btnPulse 1.2s infinite;
+        }
+        @keyframes btnPulse {
+            0% { box-shadow: 0 0 0 0 #ff3366aa; }
+            100% { box-shadow: 0 0 0 12px transparent; }
+        }
         .visualizer-container {
             margin-top: 1rem;
             background: #00000055;
@@ -265,10 +280,32 @@
             border-color: #ff5555;
             margin-top: 8px;
         }
+        .url-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .url-row input {
+            flex: 1;
+        }
+        .add-url-btn {
+            width: auto;
+            padding: 8px 12px;
+            margin-top: 0;
+            font-size: 0.7rem;
+        }
         footer {
             font-size: 0.6rem;
             text-align: center;
             opacity: 0.6;
+        }
+        .stream-source-badge {
+            background: #0a2a2a;
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 0.6rem;
+            margin-top: 6px;
+            color: #0fa;
         }
     </style>
 </head>
@@ -284,10 +321,11 @@
         <div class="stat-item">🔌 CONN: <span id="connStat" class="led-green" style="background:#0f0;"></span> RTMP ACTIVE</div>
         <div class="stat-item">🎛️ VIZ: <span id="vizModeLabel">BAR MODE</span></div>
         <div class="stat-item">🎧 SONG: <span id="currentSongStat">idle</span></div>
+        <div class="stat-item">📡 STREAM: <span id="streamActiveStat">OFF</span></div>
     </div>
 
     <div class="content-grid">
-        <!-- LEFT: PLAYLIST + UPLOAD -->
+        <!-- LEFT: PLAYLIST + UPLOAD + URL SOURCES -->
         <div class="panel">
             <h3>📀 GITHUB PLAYLIST // INFINITE TAPES</h3>
             <div class="playlist-area" id="playlistContainer">
@@ -298,6 +336,19 @@
                 <input type="file" id="songUpload" accept="audio/*">
                 <small style="color:#aaa;">files stored locally as blob urls</small>
             </div>
+            
+            <!-- URL MUSIC SOURCES SECTION -->
+            <div style="margin-top: 16px;">
+                <label class="url-label">🌐 MUSIC STREAM URLS (add remote tracks)</label>
+                <div class="url-row">
+                    <input type="text" id="musicUrlInput" placeholder="https://example.com/audio.mp3" value="">
+                    <button id="addUrlBtn" class="add-url-btn">➕ ADD URL</button>
+                </div>
+                <div id="urlSourcesList" style="max-height: 120px; overflow-y: auto; margin-top: 8px;">
+                    <!-- dynamic url list -->
+                </div>
+            </div>
+            
             <div style="margin-top: 12px;">
                 <label class="upload-label">🔁 LOOP TOGGLE</label>
                 <button id="loopToggleBtn" style="background:#06212a;">LOOP: OFF</button>
@@ -312,6 +363,9 @@
                 <div class="live-feed">
                     <span class="status-led led-green" id="streamLed"></span> STREAM STATUS: <span id="streamStatusText">LIVE / TRANSMITTING</span>
                 </div>
+                <!-- STREAM ON BUTTON - BIG CYBERPUNK ACTION -->
+                <button id="streamOnBtn" class="stream-on-btn">🔴 STREAM ON // ACTIVATE BROADCAST</button>
+                <div class="stream-source-badge" id="streamSourceDisplay">📡 source: local playlist</div>
             </div>
             <div class="visualizer-container">
                 <div style="display:flex; justify-content: space-between;">
@@ -358,23 +412,24 @@
     let currentAudioBuffer = null;
     let isPlaying = false;
     let loopEnabled = false;
-    let currentVisualMode = 'bars'; // bars or rorschach
-    let currentSongBlobUrl = null;
+    let currentVisualMode = 'bars';
     let currentSongName = "idle — waiting";
+    let isStreamingActive = false;  // STREAM ON/OFF state
     
-    // Playlist
+    // Playlist & URL sources
     let playlist = [
-        { name: "🌀 CYBER DRIFT (city pop edit)", url: null, isBuiltin: true, dataUrl: null },
-        { name: "🌆 NEON SUNSET - 2099", url: null, isBuiltin: true, dataUrl: null },
-        { name: "💾 8BIT KASUMI SOUL", url: null, isBuiltin: true, dataUrl: null }
+        { name: "🌀 CYBER DRIFT (city pop edit)", url: null, isBuiltin: true, dataUrl: null, sourceType: "builtin" },
+        { name: "🌆 NEON SUNSET - 2099", url: null, isBuiltin: true, dataUrl: null, sourceType: "builtin" },
+        { name: "💾 8BIT KASUMI SOUL", url: null, isBuiltin: true, dataUrl: null, sourceType: "builtin" }
     ];
+    let urlSources = []; // { name, url, audioBuffer, dataUrl }
     
-    // Helper: generate synth audio tones as placeholder audio data (generated sine loops)
+    // Helper: generate synth audio tones as placeholder audio data
     async function generateToneBuffer(nameHint) {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
-        const duration = 8; // seconds
+        const duration = 8;
         const sampleRate = audioContext.sampleRate;
         const length = duration * sampleRate;
         const buffer = audioContext.createBuffer(2, length, sampleRate);
@@ -399,11 +454,9 @@
     
     async function initPlaylistWithAudio() {
         for (let i=0; i<playlist.length; i++) {
-            if (!playlist[i].dataUrl) {
+            if (!playlist[i].audioBuffer) {
                 const buffer = await generateToneBuffer(playlist[i].name);
-                // convert buffer to blob url? we keep audioBuffer, but we can create object url for metadata.
                 playlist[i].audioBuffer = buffer;
-                playlist[i].dataUrl = URL.createObjectURL(new Blob());
             }
         }
         renderPlaylist();
@@ -413,6 +466,7 @@
     function renderPlaylist() {
         const container = document.getElementById('playlistContainer');
         container.innerHTML = '';
+        // show regular playlist
         playlist.forEach((song, idx) => {
             const div = document.createElement('div');
             div.className = 'playlist-item';
@@ -420,6 +474,64 @@
             div.onclick = () => playSongByIndex(idx);
             container.appendChild(div);
         });
+        // show URL sources as playlist items with special badge
+        urlSources.forEach((src, idx) => {
+            const div = document.createElement('div');
+            div.className = 'playlist-item';
+            div.style.borderLeftColor = "#ff66cc";
+            div.innerHTML = `<span>🌐 ${src.name}</span><span style="color:#ff66cc;">🔊</span>`;
+            div.onclick = () => playUrlSource(idx);
+            container.appendChild(div);
+        });
+    }
+    
+    async function loadUrlAudio(url, name) {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        try {
+            const response = await fetch(url, { mode: 'cors' });
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            return audioBuffer;
+        } catch (err) {
+            console.warn("Failed to load url, fallback to tone", err);
+            return await generateToneBuffer(name);
+        }
+    }
+    
+    async function addUrlSource(url, customName = null) {
+        if (!url || url.trim() === "") return;
+        const name = customName || url.split('/').pop() || "remote stream";
+        const audioBuffer = await loadUrlAudio(url, name);
+        const newSource = {
+            name: name,
+            url: url,
+            audioBuffer: audioBuffer,
+            sourceType: "url"
+        };
+        urlSources.push(newSource);
+        renderPlaylist();
+        // auto play this new source
+        playUrlSource(urlSources.length - 1);
+    }
+    
+    async function playUrlSource(index) {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioSource) {
+            try { audioSource.stop(); } catch(e) {}
+            audioSource.disconnect();
+        }
+        const src = urlSources[index];
+        currentAudioBuffer = src.audioBuffer;
+        currentSongName = src.name;
+        document.getElementById('nowPlayingTitle').innerText = src.name;
+        document.getElementById('currentSongStat').innerText = src.name.substring(0,20);
+        document.getElementById('previewTrack').innerHTML = src.name;
+        document.getElementById('streamSourceDisplay').innerHTML = `📡 source: URL stream · ${src.url.substring(0,40)}`;
+        startPlayback();
     }
     
     async function playSongByIndex(index) {
@@ -434,7 +546,6 @@
         let audioBuffer = song.audioBuffer;
         if (!audioBuffer) {
             if (song.dataUrl && song.dataUrl.startsWith('blob:')) {
-                // user uploaded
                 const resp = await fetch(song.dataUrl);
                 const arrayBuf = await resp.arrayBuffer();
                 audioBuffer = await audioContext.decodeAudioData(arrayBuf);
@@ -449,6 +560,7 @@
         document.getElementById('nowPlayingTitle').innerText = song.name;
         document.getElementById('currentSongStat').innerText = song.name.substring(0,20);
         document.getElementById('previewTrack').innerHTML = song.name;
+        document.getElementById('streamSourceDisplay').innerHTML = `📡 source: local playlist · ${song.name}`;
         startPlayback();
     }
     
@@ -461,24 +573,31 @@
         audioSource.buffer = currentAudioBuffer;
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
         audioSource.connect(analyser);
         analyser.connect(audioContext.destination);
         audioSource.loop = loopEnabled;
         audioSource.onended = () => {
-            if (!loopEnabled) {
-                // auto next track in playlist cyclic
-                let currentIdx = playlist.findIndex(s => s.name === currentSongName);
-                let next = (currentIdx+1) % playlist.length;
-                playSongByIndex(next);
+            if (!loopEnabled && isStreamingActive) {
+                // auto next in playlist or url sources
+                let allSources = [...playlist.map(p=>({...p, isUrl:false})), ...urlSources.map(u=>({...u, isUrl:true}))];
+                let currentIdx = allSources.findIndex(s => s.name === currentSongName);
+                let next = (currentIdx+1) % allSources.length;
+                if (allSources[next].isUrl) {
+                    let urlIdx = urlSources.findIndex(u => u.name === allSources[next].name);
+                    if(urlIdx>=0) playUrlSource(urlIdx);
+                } else {
+                    let plIdx = playlist.findIndex(p => p.name === allSources[next].name);
+                    if(plIdx>=0) playSongByIndex(plIdx);
+                }
             }
         };
         audioSource.start();
         isPlaying = true;
         if (animationId) cancelAnimationFrame(animationId);
         startVisualizerLoop(analyser);
-        if (audioContext.state === 'suspended') {
+        if (audioContext.state === 'suspended' && isStreamingActive) {
+            audioContext.resume();
+        } else if (audioContext.state === 'suspended') {
             audioContext.resume();
         }
     }
@@ -506,7 +625,6 @@
         } else {
             drawRorschachMode(freqData, binCount, w, h);
         }
-        // add VHS grain effect on canvas
         ctx.fillStyle = 'rgba(0,0,0,0.08)';
         ctx.fillRect(0,0,w,h);
     }
@@ -522,13 +640,11 @@
             ctx.shadowBlur = 12;
             ctx.shadowColor = '#0ff';
             ctx.fillRect(x, h - barHeight, barWidth - 1, barHeight);
-            // glow trail reflection
             ctx.fillStyle = `rgba(0, 255, 255, 0.3)`;
             ctx.fillRect(x, h - barHeight - 2, barWidth - 1, 4);
             x += barWidth;
         }
         ctx.shadowBlur = 0;
-        // bass flash
         const avg = data.slice(0,12).reduce((a,b)=>a+b,0)/12;
         if(avg > 180) {
             ctx.fillStyle = `rgba(0, 255, 180, 0.2)`;
@@ -564,7 +680,6 @@
             ctx.arc(x2, y2, 3+val*8, 0, Math.PI*2);
             ctx.fill();
         }
-        // kaleido effect
         for(let s=0; s<6; s++) {
             let rad = (Date.now() * 0.003 + s) % (Math.PI*2);
             let intensity = (data[8] / 255) * 20;
@@ -581,17 +696,25 @@
         const file = e.target.files[0];
         if (!file) return;
         const url = URL.createObjectURL(file);
-        const newSong = { name: file.name, url: url, dataUrl: url, isBuiltin: false, audioBuffer: null };
+        const newSong = { name: file.name, url: url, dataUrl: url, audioBuffer: null, sourceType: "upload" };
         playlist.push(newSong);
         if (audioContext) {
             const arrayBuf = await file.arrayBuffer();
             const decoded = await audioContext.decodeAudioData(arrayBuf);
             newSong.audioBuffer = decoded;
-        } else {
-            newSong.audioBuffer = null;
         }
         renderPlaylist();
         playSongByIndex(playlist.length-1);
+    });
+    
+    // Add URL button
+    document.getElementById('addUrlBtn').addEventListener('click', () => {
+        const urlInput = document.getElementById('musicUrlInput');
+        const rawUrl = urlInput.value.trim();
+        if (rawUrl) {
+            addUrlSource(rawUrl);
+            urlInput.value = '';
+        }
     });
     
     // Loop toggle
@@ -611,19 +734,43 @@
         });
     });
     
-    // Stream title / RTMP simulation stats + preview
+    // STREAM ON BUTTON LOGIC
+    const streamOnBtn = document.getElementById('streamOnBtn');
+    streamOnBtn.addEventListener('click', async () => {
+        if (!isStreamingActive) {
+            isStreamingActive = true;
+            streamOnBtn.innerText = '🔴 STREAMING ACTIVE // CLICK TO OFF';
+            streamOnBtn.classList.add('streaming-active');
+            document.getElementById('streamActiveStat').innerHTML = 'ON AIR';
+            document.getElementById('streamStatusText').innerHTML = 'LIVE // BROADCASTING TO RTMP';
+            if (audioContext && audioContext.state === 'suspended') {
+                await audioContext.resume();
+            } else if (!audioContext || !currentAudioBuffer) {
+                if(playlist.length) playSongByIndex(0);
+            } else if (audioSource && !isPlaying) {
+                startPlayback();
+            }
+        } else {
+            isStreamingActive = false;
+            streamOnBtn.innerText = '🔴 STREAM ON // ACTIVATE BROADCAST';
+            streamOnBtn.classList.remove('streaming-active');
+            document.getElementById('streamActiveStat').innerHTML = 'OFF';
+            document.getElementById('streamStatusText').innerHTML = 'STREAM PAUSED / STANDBY';
+            if (audioSource) {
+                try { audioSource.stop(); } catch(e) {}
+                isPlaying = false;
+            }
+        }
+    });
+    
+    // Stream title editor preview
     const streamTitleInput = document.getElementById('streamTitleEdit');
     const previewTitleSpan = document.getElementById('previewTitle');
-    const previewTrackSpan = document.getElementById('previewTrack');
     streamTitleInput.addEventListener('input', () => {
         previewTitleSpan.innerText = streamTitleInput.value;
-        document.getElementById('livePreviewMock').style.borderColor = '#0ff';
     });
-    setInterval(() => {
-        previewTrackSpan.innerText = currentSongName;
-    }, 1000);
     
-    // System stat simulation (fake autonomous stats)
+    // System stats simulation
     let startTime = Date.now();
     setInterval(() => {
         let cpu = 12 + Math.sin(Date.now() * 0.001) * 15 + (Math.random() * 8);
@@ -643,38 +790,35 @@
             document.getElementById('rtmpHealthText').innerText = "HEALTHY • AUTO-RECONNECT";
             document.getElementById('rtmpHealthLed').style.background = "#0f0";
         }
-        document.getElementById('connStat').style.background = "#0f0";
     }, 1800);
     
-    // Emergency restart button : reset audio engine
+    // Emergency restart
     const emergencyBtn = document.getElementById('emergencyRestartBtn');
     emergencyBtn.addEventListener('click', async () => {
         if (audioContext) {
             await audioContext.close();
         }
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        if (currentAudioBuffer) {
+        if (currentAudioBuffer && isStreamingActive) {
             startPlayback();
-        } else {
-            if(playlist.length) playSongByIndex(0);
+        } else if(playlist.length) {
+            playSongByIndex(0);
         }
         document.getElementById('streamStatusText').innerHTML = "RESTARTED // FFMPEG DAEMON OK";
-        setTimeout(()=>{document.getElementById('streamStatusText').innerHTML="LIVE / TRANSMITTING";}, 1500);
+        setTimeout(()=>{ if(isStreamingActive) document.getElementById('streamStatusText').innerHTML="LIVE / TRANSMITTING"; else document.getElementById('streamStatusText').innerHTML="STREAM PAUSED / STANDBY"; }, 1500);
     });
     
-    // RTMP preview simulation updates
+    // Live preview update
     setInterval(() => {
         const rtmpKey = document.getElementById('rtmpKeyInput').value.slice(0, 30);
-        document.getElementById('livePreviewMock').innerHTML = `🔴 [GIT RADIO] stream: ${streamTitleInput.value}<br>🎵 current track: ${currentSongName} | rtmp: ${rtmpKey}...<br>⚡ DOCKER VPS • 24/7 CLOUD ENGINE`;
-    }, 2000);
+        document.getElementById('livePreviewMock').innerHTML = `🔴 [GIT RADIO] stream: ${streamTitleInput.value}<br>🎵 current track: ${currentSongName} | rtmp: ${rtmpKey}...<br>⚡ DOCKER VPS • ${isStreamingActive ? 'LIVE' : 'STANDBY'} MODE`;
+        document.getElementById('previewTrack').innerHTML = currentSongName;
+    }, 1500);
     
     // Init
-    initPlaylistWithAudio().then(()=>{
-        document.getElementById('streamLed').classList.add('led-green');
-    });
-    // set default stat values
+    initPlaylistWithAudio();
     document.getElementById('vizModeLabel').innerText = "BAR MODE";
-    document.getElementById('nowPlayingTitle').innerText = "~ neon dreams ~";
+    document.getElementById('streamActiveStat').innerHTML = "OFF";
 </script>
 </body>
 </html>
