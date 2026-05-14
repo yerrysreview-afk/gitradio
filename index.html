@@ -1,824 +1,691 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>GIT RADIO // 24/7 CYBERPUNK LIVESTREAM</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GIT RADIO // 24/7 CYBERPUNK LIVESTREAM</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;}
+body{
+  background:radial-gradient(ellipse at 20% 20%,#040d1a 0%,#010508 100%);
+  min-height:100vh;
+  font-family:'Share Tech Mono','Courier New',monospace;
+  display:flex;justify-content:center;align-items:flex-start;
+  padding:1.2rem;overflow-x:hidden;position:relative;
+}
+body::before{
+  content:"";position:fixed;top:0;left:0;width:100%;height:100%;
+  background:repeating-linear-gradient(0deg,rgba(0,255,255,0.018) 0px,rgba(0,255,255,0.018) 1px,transparent 1px,transparent 4px);
+  pointer-events:none;z-index:999;
+}
+body::after{
+  content:"";position:fixed;top:0;left:0;width:100%;height:100%;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.75) 100%);
+  pointer-events:none;z-index:998;
+}
+.scan{
+  position:fixed;top:-100%;left:0;width:100%;height:40px;
+  background:linear-gradient(transparent,rgba(0,255,255,0.04),transparent);
+  pointer-events:none;z-index:1000;animation:scanDown 6s linear infinite;
+}
+@keyframes scanDown{0%{top:-5%}100%{top:105%}}
 
-        body {
-            background: radial-gradient(circle at 20% 30%, #0a0f1a, #010101);
-            min-height: 100vh;
-            font-family: 'Share Tech Mono', 'Courier New', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1.5rem;
-            position: relative;
-            overflow-x: hidden;
-        }
+.dashboard{
+  max-width:1500px;width:100%;
+  background:rgba(4,12,20,0.94);
+  border:1px solid rgba(0,255,255,0.3);border-radius:28px;
+  box-shadow:0 0 80px rgba(0,255,255,0.06),inset 0 0 60px rgba(0,255,255,0.02);
+  padding:1.5rem;display:flex;flex-direction:column;gap:1.4rem;
+  z-index:2;margin:auto;
+}
 
-        /* CRT + VHS overlays */
-        .crt::before {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0, 255, 255, 0.03) 0px, rgba(0, 255, 255, 0.03) 2px, transparent 2px, transparent 6px);
-            pointer-events: none;
-            z-index: 999;
-        }
+/* HEADER */
+.header{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+  border-bottom:1px solid rgba(0,255,255,0.15);padding-bottom:1rem;
+}
+.logo{
+  font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;
+  color:#0ff;text-shadow:0 0 16px #0ff,0 0 40px rgba(0,255,255,0.4);letter-spacing:5px;
+}
+.logo em{color:#ff66cc;font-style:normal;text-shadow:0 0 16px #ff44aa,0 0 40px rgba(255,68,170,0.4);}
+.hstats{display:flex;flex-wrap:wrap;gap:0.6rem;font-size:0.68rem;}
+.hs{
+  background:rgba(0,255,255,0.05);border:1px solid rgba(0,255,255,0.18);
+  border-radius:20px;padding:4px 11px;color:#0ff;letter-spacing:1px;
+  display:flex;align-items:center;gap:6px;
+}
+.led{width:7px;height:7px;border-radius:50%;display:inline-block;animation:blink 1.2s infinite alternate;}
+.led.g{background:#0f0;box-shadow:0 0 6px #0f0;}
+.led.r{background:#f33;box-shadow:0 0 6px #f33;}
+.led.y{background:#ff3;box-shadow:0 0 6px #ff3;}
+.led.off{background:#444;box-shadow:none;animation:none;}
+@keyframes blink{from{opacity:.3}to{opacity:1}}
 
-        .vhs-grain {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.08"/></svg>');
-            background-repeat: repeat;
-            pointer-events: none;
-            z-index: 998;
-            mix-blend-mode: overlay;
-        }
+/* GRID */
+.grid{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:1.2rem;}
+@media(max-width:980px){.grid{grid-template-columns:1fr;}}
 
-        .glitch-scan {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 255, 0.02) 50%);
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 1000;
-            animation: scanMove 8s linear infinite;
-        }
+/* PANELS */
+.panel{
+  background:rgba(0,255,255,0.025);border:1px solid rgba(0,255,255,0.16);
+  border-radius:20px;padding:1.2rem;display:flex;flex-direction:column;gap:0.9rem;
+}
+.ptitle{
+  font-family:'Orbitron',monospace;font-size:0.6rem;font-weight:700;
+  color:#0ff;letter-spacing:3px;text-transform:uppercase;
+  border-bottom:1px dashed rgba(0,255,255,0.2);padding-bottom:0.6rem;
+}
 
-        @keyframes scanMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 20px; }
-        }
+/* PLAYLIST */
+.playlist{
+  display:flex;flex-direction:column;gap:5px;
+  max-height:300px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(0,255,255,0.25) transparent;
+}
+.track{
+  display:flex;align-items:center;gap:9px;
+  background:rgba(0,0,0,0.5);border:1px solid rgba(0,255,255,0.1);
+  border-radius:12px;padding:9px 12px;cursor:pointer;
+  transition:all 0.15s;font-size:0.76rem;color:#9dd;
+}
+.track:hover{background:rgba(0,255,255,0.07);border-color:rgba(0,255,255,0.35);transform:translateX(3px);}
+.track.active{background:rgba(0,255,255,0.1);border-color:rgba(0,255,255,0.6);color:#0ff;box-shadow:0 0 12px rgba(0,255,255,0.12);}
+.track.trk-loading{border-color:rgba(255,255,0,0.3);color:#cc8;}
+.track.trk-error{border-color:rgba(255,80,80,0.3);color:#c88;}
+.tnum{color:rgba(0,255,255,0.35);font-size:0.62rem;min-width:16px;text-align:right;}
+.tname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tbadge{
+  font-size:0.52rem;padding:2px 7px;border-radius:8px;letter-spacing:1px;flex-shrink:0;
+  background:rgba(0,255,255,0.12);color:#0ff;
+}
+.tbadge.bplay{background:rgba(0,255,255,0.25);animation:blink 0.7s infinite alternate;}
+.tbadge.bload{background:rgba(255,255,0,0.1);color:#cc8;}
+.tbadge.berr{background:rgba(255,80,80,0.1);color:#c88;}
+.tbadge.burl{background:rgba(255,102,204,0.12);color:#ff66cc;}
 
-        /* main app grid */
-        .radio-dashboard {
-            max-width: 1500px;
-            width: 100%;
-            background: rgba(10, 20, 25, 0.65);
-            backdrop-filter: blur(10px);
-            border: 1px solid #0ff8;
-            border-radius: 32px;
-            box-shadow: 0 0 40px #0ff3, inset 0 0 20px #0ff1;
-            padding: 1.8rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.8rem;
-            z-index: 2;
-        }
+.repo-status{
+  font-size:0.64rem;color:rgba(0,255,255,0.45);
+  background:rgba(0,0,0,0.35);border-radius:10px;padding:7px 10px;line-height:1.6;
+}
 
-        /* top stats row */
-        .sys-stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            background: #000000aa;
-            border-radius: 20px;
-            padding: 0.6rem 1.2rem;
-            border-left: 4px solid cyan;
-            font-weight: bold;
-            color: #0ff;
-            text-shadow: 0 0 3px cyan;
-        }
+/* TOGGLE BTNS */
+.togrow{display:flex;gap:8px;}
+.togbtn{
+  flex:1;padding:7px;border-radius:20px;cursor:pointer;
+  background:rgba(0,50,60,0.5);border:1px solid rgba(0,255,255,0.18);
+  color:rgba(0,255,255,0.6);font-family:'Share Tech Mono',monospace;font-size:0.68rem;
+  letter-spacing:1px;transition:0.15s;
+}
+.togbtn:hover{background:rgba(0,255,255,0.08);}
+.togbtn.on{background:rgba(0,255,255,0.15);border-color:rgba(0,255,255,0.5);color:#0ff;}
 
-        .stat-item {
-            display: flex;
-            gap: 0.5rem;
-            letter-spacing: 1px;
-        }
+/* CENTER */
+.now-title{
+  font-family:'Orbitron',monospace;font-size:1.05rem;font-weight:700;
+  color:#ff66cc;text-shadow:0 0 14px #ff44aa;
+  text-align:center;line-height:1.4;min-height:2.8rem;
+  display:flex;align-items:center;justify-content:center;
+}
+.stream-badge{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:0.7rem;color:#0fa;
+  background:rgba(0,0,0,0.4);border-radius:14px;padding:7px 14px;
+}
+.stream-btn{
+  width:100%;padding:14px;border-radius:30px;
+  font-family:'Orbitron',monospace;font-size:0.9rem;font-weight:700;
+  letter-spacing:3px;cursor:pointer;border:none;
+  background:linear-gradient(90deg,#0a4a38,#084060);
+  color:#0ff;text-shadow:0 0 6px #0ff;
+  box-shadow:0 0 20px rgba(0,255,255,0.08);transition:all 0.2s;
+}
+.stream-btn:hover{box-shadow:0 0 30px rgba(0,255,255,0.22);}
+.stream-btn.on{
+  background:linear-gradient(90deg,#550022,#880033);
+  color:#ff66cc;text-shadow:0 0 8px #ff44aa;
+  box-shadow:0 0 20px rgba(255,51,102,0.3);
+  animation:btnpulse 1.3s infinite;
+}
+@keyframes btnpulse{0%{box-shadow:0 0 0 0 rgba(255,51,102,0.4)}100%{box-shadow:0 0 0 14px transparent}}
 
-        /* main grid */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr 1fr;
-            gap: 1.5rem;
-        }
+.controls{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:2px;}
+.ctrl{
+  background:rgba(0,255,255,0.06);border:1px solid rgba(0,255,255,0.2);
+  border-radius:50%;width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;cursor:pointer;transition:0.15s;
+}
+.ctrl:hover{background:rgba(0,255,255,0.14);box-shadow:0 0 10px rgba(0,255,255,0.2);}
 
-        @media (max-width: 1000px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-        }
+.vol-row{display:flex;align-items:center;gap:10px;font-size:0.7rem;color:#0ff;}
+.vol-row input[type=range]{flex:1;accent-color:#0ff;cursor:pointer;background:transparent;border:none;padding:0;}
 
-        /* panels */
-        .panel {
-            background: #05161e80;
-            backdrop-filter: blur(12px);
-            border-radius: 24px;
-            border: 1px solid cyan;
-            padding: 1.2rem;
-            box-shadow: 0 8px 20px #00000055;
-            transition: all 0.2s;
-        }
+/* VIZ */
+.viz-wrap{background:rgba(0,0,0,0.5);border-radius:20px;padding:0.6rem;}
+canvas{display:block;width:100%;height:170px;border-radius:14px;}
+.modesrow{display:flex;gap:8px;margin-top:8px;}
+.modebtn{
+  flex:1;padding:7px;border-radius:20px;cursor:pointer;
+  background:rgba(0,50,60,0.5);border:1px solid rgba(0,255,255,0.18);
+  color:rgba(0,255,255,0.6);font-family:'Share Tech Mono',monospace;font-size:0.65rem;
+  letter-spacing:1px;transition:0.15s;
+}
+.modebtn:hover{background:rgba(0,255,255,0.08);}
+.modebtn.active{background:rgba(0,255,255,0.15);border-color:rgba(0,255,255,0.5);color:#0ff;}
 
-        .panel h3 {
-            color: #0ff;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 1rem;
-            border-bottom: 1px dashed #0ff6;
-            display: inline-block;
-        }
+/* RIGHT */
+.field-lbl{font-size:0.62rem;color:rgba(0,255,255,0.5);letter-spacing:1px;margin-bottom:4px;}
+.field{
+  width:100%;background:rgba(0,0,0,0.5);border:1px solid rgba(0,255,255,0.2);
+  border-radius:20px;padding:8px 14px;color:#0ff;
+  font-family:'Share Tech Mono',monospace;font-size:0.72rem;outline:none;transition:border-color 0.2s;
+}
+.field:focus{border-color:rgba(0,255,255,0.5);}
+.rtmp-health{
+  display:flex;align-items:center;gap:8px;font-size:0.68rem;color:#0fa;
+  background:rgba(0,0,0,0.3);border-radius:12px;padding:7px 12px;
+}
+.emergency{
+  width:100%;padding:9px;border-radius:20px;cursor:pointer;
+  background:rgba(80,0,0,0.5);border:1px solid rgba(255,80,80,0.35);
+  color:#f88;font-family:'Share Tech Mono',monospace;font-size:0.7rem;
+  letter-spacing:1px;transition:0.2s;
+}
+.emergency:hover{background:rgba(120,0,0,0.6);box-shadow:0 0 12px rgba(255,50,50,0.2);}
+.preview-box{
+  background:rgba(0,0,0,0.4);border:1px solid rgba(0,255,255,0.1);
+  border-radius:14px;padding:10px 12px;font-size:0.64rem;color:#0fa;line-height:1.9;
+}
+.url-row{display:flex;gap:6px;}
+.add-btn{
+  padding:8px 14px;border-radius:20px;cursor:pointer;
+  background:rgba(0,255,255,0.08);border:1px solid rgba(0,255,255,0.25);
+  color:#0ff;font-family:'Share Tech Mono',monospace;font-size:0.7rem;
+  white-space:nowrap;transition:0.15s;
+}
+.add-btn:hover{background:rgba(0,255,255,0.15);}
 
-        .playlist-area {
-            max-height: 280px;
-            overflow-y: auto;
-        }
-
-        .playlist-item {
-            background: #00000099;
-            margin: 6px 0;
-            padding: 8px 10px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            border-left: 3px solid #0ff;
-            cursor: pointer;
-            transition: 0.1s linear;
-        }
-
-        .playlist-item:hover {
-            background: cyan20;
-            transform: translateX(4px);
-            box-shadow: 0 0 6px cyan;
-        }
-
-        .now-playing-card {
-            text-align: center;
-        }
-        .song-title {
-            font-size: 1.6rem;
-            font-weight: bold;
-            color: #ff66cc;
-            text-shadow: 0 0 10px #ff44aa;
-            margin: 0.5rem 0;
-        }
-
-        .upload-label, .rtmp-label, .url-label {
-            display: block;
-            margin: 12px 0 4px;
-            font-size: 0.7rem;
-            color: cyan;
-        }
-
-        input, button, textarea {
-            background: #010d12;
-            border: 1px solid cyan;
-            padding: 8px 12px;
-            border-radius: 30px;
-            color: #0ff;
-            font-family: monospace;
-            width: 100%;
-            margin-top: 5px;
-        }
-        button {
-            background: linear-gradient(90deg, #0a2f3a, #02161c);
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        button:hover {
-            background: #0ff2;
-            box-shadow: 0 0 8px cyan;
-            border-color: #0ff;
-        }
-        .stream-on-btn {
-            background: linear-gradient(90deg, #00aa88, #0066aa);
-            color: white;
-            text-shadow: 0 0 4px cyan;
-            margin-top: 12px;
-            font-size: 1rem;
-            letter-spacing: 2px;
-        }
-        .stream-on-btn.streaming-active {
-            background: linear-gradient(90deg, #ff3366, #cc0044);
-            animation: btnPulse 1.2s infinite;
-        }
-        @keyframes btnPulse {
-            0% { box-shadow: 0 0 0 0 #ff3366aa; }
-            100% { box-shadow: 0 0 0 12px transparent; }
-        }
-        .visualizer-container {
-            margin-top: 1rem;
-            background: #00000055;
-            border-radius: 28px;
-            padding: 0.5rem;
-        }
-
-        canvas#audioCanvas {
-            width: 100%;
-            background: #00000077;
-            border-radius: 20px;
-            display: block;
-            margin-top: 8px;
-            height: 180px;
-            width: 100%;
-        }
-
-        .mode-selector {
-            display: flex;
-            gap: 1rem;
-            margin: 10px 0;
-        }
-        .mode-btn {
-            flex: 1;
-            font-size: 0.7rem;
-            background: #071e24;
-        }
-
-        .status-led {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: red;
-            box-shadow: 0 0 6px red;
-            margin-right: 6px;
-            animation: pulse 1.2s infinite;
-        }
-        .led-green {
-            background: #0f0;
-            box-shadow: 0 0 8px #0f0;
-        }
-        @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
-
-        .live-feed {
-            background: #000000aa;
-            border-radius: 20px;
-            margin-top: 12px;
-            padding: 10px;
-            text-align: center;
-            font-size: 0.7rem;
-            color: #0fa;
-        }
-        .emergency {
-            background: #8b0000aa;
-            border-color: #ff5555;
-            margin-top: 8px;
-        }
-        .url-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .url-row input {
-            flex: 1;
-        }
-        .add-url-btn {
-            width: auto;
-            padding: 8px 12px;
-            margin-top: 0;
-            font-size: 0.7rem;
-        }
-        footer {
-            font-size: 0.6rem;
-            text-align: center;
-            opacity: 0.6;
-        }
-        .stream-source-badge {
-            background: #0a2a2a;
-            border-radius: 12px;
-            padding: 4px 8px;
-            font-size: 0.6rem;
-            margin-top: 6px;
-            color: #0fa;
-        }
-    </style>
+footer{
+  font-size:0.57rem;text-align:center;
+  color:rgba(0,255,255,0.28);letter-spacing:2px;
+  border-top:1px solid rgba(0,255,255,0.08);padding-top:0.8rem;
+}
+</style>
 </head>
-<body class="crt">
-<div class="vhs-grain"></div>
-<div class="glitch-scan"></div>
+<body>
+<div class="scan"></div>
+<div class="dashboard">
 
-<div class="radio-dashboard">
-    <div class="sys-stats">
-        <div class="stat-item">🌀 CPU: <span id="cpuStat">23%</span></div>
-        <div class="stat-item">📡 BITRATE: <span id="bitrateStat">3240 kbps</span></div>
-        <div class="stat-item">⏱️ UPTIME: <span id="uptimeStat">00:00:00</span></div>
-        <div class="stat-item">🔌 CONN: <span id="connStat" class="led-green" style="background:#0f0;"></span> RTMP ACTIVE</div>
-        <div class="stat-item">🎛️ VIZ: <span id="vizModeLabel">BAR MODE</span></div>
-        <div class="stat-item">🎧 SONG: <span id="currentSongStat">idle</span></div>
-        <div class="stat-item">📡 STREAM: <span id="streamActiveStat">OFF</span></div>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">GIT <em>RADIO</em></div>
+    <div class="hstats">
+      <div class="hs"><span class="led g"></span> CPU: <span id="cpuS">--</span></div>
+      <div class="hs">📡 BITRATE: <span id="bitS">--</span></div>
+      <div class="hs">⏱ UPTIME: <span id="upS">00:00:00</span></div>
+      <div class="hs"><span class="led off" id="streamLed"></span> STREAM: <span id="streamStat">OFF</span></div>
+      <div class="hs">🎛 VIZ: <span id="vizLabel">BAR</span></div>
+      <div class="hs">🎧 <span id="songStat">idle</span></div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- LEFT: PLAYLIST -->
+    <div class="panel">
+      <div class="ptitle">📀 GITHUB PLAYLIST // MAIN BRANCH</div>
+      <div class="playlist" id="playlistEl"></div>
+      <div class="repo-status" id="repoStatus">
+        📡 repo: yerrysreview-afk/gitradio · branch: main<br>
+        🔄 fetching tracks from raw.githubusercontent.com…
+      </div>
+      <div class="togrow">
+        <button class="togbtn" id="loopBtn" onclick="toggleLoop()">🔁 LOOP: OFF</button>
+        <button class="togbtn" id="shuffleBtn" onclick="toggleShuffle()">🔀 SHUFFLE: OFF</button>
+      </div>
     </div>
 
-    <div class="content-grid">
-        <!-- LEFT: PLAYLIST + UPLOAD + URL SOURCES -->
-        <div class="panel">
-            <h3>📀 GITHUB PLAYLIST // INFINITE TAPES</h3>
-            <div class="playlist-area" id="playlistContainer">
-                <!-- dynamic playlist -->
-            </div>
-            <div class="upload-area">
-                <label class="upload-label">⬆️ UPLOAD AUDIO (mp3/wav/ogg)</label>
-                <input type="file" id="songUpload" accept="audio/*">
-                <small style="color:#aaa;">files stored locally as blob urls</small>
-            </div>
-            
-            <!-- URL MUSIC SOURCES SECTION -->
-            <div style="margin-top: 16px;">
-                <label class="url-label">🌐 MUSIC STREAM URLS (add remote tracks)</label>
-                <div class="url-row">
-                    <input type="text" id="musicUrlInput" placeholder="https://example.com/audio.mp3" value="">
-                    <button id="addUrlBtn" class="add-url-btn">➕ ADD URL</button>
-                </div>
-                <div id="urlSourcesList" style="max-height: 120px; overflow-y: auto; margin-top: 8px;">
-                    <!-- dynamic url list -->
-                </div>
-            </div>
-            
-            <div style="margin-top: 12px;">
-                <label class="upload-label">🔁 LOOP TOGGLE</label>
-                <button id="loopToggleBtn" style="background:#06212a;">LOOP: OFF</button>
-            </div>
+    <!-- CENTER: NOW PLAYING + VIZ -->
+    <div class="panel">
+      <div class="ptitle">🎙 NOW PLAYING // GIT RADIO EXCLUSIVE</div>
+      <div class="now-title" id="nowTitle">~ connecting to github ~</div>
+      <div class="stream-badge">
+        <span class="led off" id="streamLed2"></span>
+        <span id="streamStatusTxt">STANDBY — PRESS STREAM ON</span>
+      </div>
+      <button class="stream-btn" id="streamBtn" onclick="toggleStream()">🔴 STREAM ON // ACTIVATE BROADCAST</button>
+      <div class="controls">
+        <div class="ctrl" onclick="prevTrack()" title="Prev">⏮</div>
+        <div class="ctrl" id="ppBtn" onclick="togglePP()" title="Play/Pause">▶</div>
+        <div class="ctrl" onclick="nextTrack()" title="Next">⏭</div>
+      </div>
+      <div class="vol-row">
+        <span>🔊</span>
+        <input type="range" id="volSlider" min="0" max="1" step="0.01" value="0.8" oninput="setVol(this.value)">
+        <span id="volPct">80%</span>
+      </div>
+      <div class="viz-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:0.63rem;color:rgba(0,255,255,0.4);margin-bottom:4px;">
+          <span>🌀 SPECTRUM ENGINE</span><span id="vizHint">neon bars · bass reactive</span>
         </div>
-
-        <!-- CENTER: NOW PLAYING + VISUALIZER -->
-        <div class="panel">
-            <div class="now-playing-card">
-                <h3>🎙️ NOW PLAYING // GIT RADIO EXCLUSIVE</h3>
-                <div class="song-title" id="nowPlayingTitle">~ neon dreams ~</div>
-                <div class="live-feed">
-                    <span class="status-led led-green" id="streamLed"></span> STREAM STATUS: <span id="streamStatusText">LIVE / TRANSMITTING</span>
-                </div>
-                <!-- STREAM ON BUTTON - BIG CYBERPUNK ACTION -->
-                <button id="streamOnBtn" class="stream-on-btn">🔴 STREAM ON // ACTIVATE BROADCAST</button>
-                <div class="stream-source-badge" id="streamSourceDisplay">📡 source: local playlist</div>
-            </div>
-            <div class="visualizer-container">
-                <div style="display:flex; justify-content: space-between;">
-                    <span>🌀 AUDIO SPECTRUM ENGINE</span>
-                    <span id="vizHint">bar spectrum</span>
-                </div>
-                <canvas id="audioCanvas" width="600" height="180" style="width:100%; height:180px"></canvas>
-                <div class="mode-selector">
-                    <button class="mode-btn" data-mode="bars">📊 BAR MODE</button>
-                    <button class="mode-btn" data-mode="rorschach">🌌 RORSCHACH MODE</button>
-                </div>
-            </div>
+        <canvas id="cvs" width="600" height="170"></canvas>
+        <div class="modesrow">
+          <button class="modebtn active" id="btnBars" onclick="setMode('bars')">📊 BARS</button>
+          <button class="modebtn" id="btnRor" onclick="setMode('rorschach')">🌌 RORSCHACH</button>
+          <button class="modebtn" id="btnWave" onclick="setMode('wave')">〰 WAVE</button>
         </div>
-
-        <!-- RIGHT: RTMP + STREAM CONTROL -->
-        <div class="panel">
-            <h3>🎛️ RTMP BROADCAST ENGINE</h3>
-            <label class="rtmp-label">🔑 RTMP KEY / STREAM URL</label>
-            <input type="text" id="rtmpKeyInput" placeholder="rtmp://ingest.youtube.com/live/STREAM_KEY" value="rtmp://live.twitch.tv/app/live_12345_cyber">
-            <label class="rtmp-label">✍️ STREAM TITLE EDITOR</label>
-            <input type="text" id="streamTitleEdit" value="GIT RADIO // 24/7 DIMENSIONAL FREQ">
-            <div class="status-led" id="rtmpHealthLed" style="background:#0f0;"></div> <span id="rtmpHealthText">HEALTHY • AUTO-RECONNECT</span>
-            <button id="emergencyRestartBtn" class="emergency">⚠️ EMERGENCY RESTART (FFMPEG DAEMON)</button>
-            <div class="live-preview-area" style="margin-top: 15px;">
-                <div style="font-size:0.7rem;">📺 LIVE PREVIEW (MOCK)</div>
-                <div id="livePreviewMock" style="background:#030c10; border-radius:16px; padding:8px; margin-top:5px; font-size:0.7rem; border: 1px solid #0ff3;">
-                    🔴 [GIT RADIO] stream: <span id="previewTitle">GIT RADIO // 24/7 DIMENSIONAL FREQ</span><br>
-                    🎵 current track: <span id="previewTrack">---</span> | bitrate: 4.2Mbps
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
-    <footer>⚡ GIT RADIO • 24/7 AUTONOMOUS • FFMPEG • DOCKER VPS SIM • neon rtmp cluster • cyberpunk dar es salaam</footer>
+
+    <!-- RIGHT: RTMP -->
+    <div class="panel">
+      <div class="ptitle">🎛 RTMP BROADCAST ENGINE</div>
+      <div>
+        <div class="field-lbl">🔑 RTMP STREAM URL / KEY</div>
+        <input class="field" id="rtmpKey" type="text" value="rtmp://live.twitch.tv/app/live_12345_cyber">
+      </div>
+      <div>
+        <div class="field-lbl">✍ STREAM TITLE</div>
+        <input class="field" id="streamTitle" type="text" value="GIT RADIO // 24/7 DIMENSIONAL FREQ" oninput="updatePreview()">
+      </div>
+      <div class="rtmp-health">
+        <span class="led g" id="rtmpLed"></span>
+        <span id="rtmpHealthTxt">HEALTHY · AUTO-RECONNECT</span>
+      </div>
+      <button class="emergency" onclick="emergencyRestart()">⚠️ EMERGENCY RESTART // FFMPEG DAEMON</button>
+      <div>
+        <div class="field-lbl">📺 LIVE PREVIEW</div>
+        <div class="preview-box" id="previewBox">🔴 [GIT RADIO] initialising…</div>
+      </div>
+      <div>
+        <div class="field-lbl">🌐 ADD EXTRA URL TRACK</div>
+        <div class="url-row">
+          <input class="field" id="extraUrl" type="text" placeholder="https://…/track.mp3" style="flex:1;">
+          <button class="add-btn" onclick="addExtraUrl()">＋ ADD</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+  <footer>⚡ GIT RADIO · 24/7 AUTONOMOUS · FFMPEG · DOCKER VPS · yerrysreview-afk/gitradio@main · CYBERPUNK DAR ES SALAAM</footer>
 </div>
 
 <script>
-    // ---------- AUDIO & VISUAL CORE ----------
-    const canvas = document.getElementById('audioCanvas');
-    const ctx = canvas.getContext('2d');
-    let audioContext = null;
-    let audioSource = null;
-    let analyser = null;
-    let animationId = null;
-    let currentAudioBuffer = null;
-    let isPlaying = false;
-    let loopEnabled = false;
-    let currentVisualMode = 'bars';
-    let currentSongName = "idle — waiting";
-    let isStreamingActive = false;  // STREAM ON/OFF state
-    
-    // Playlist & URL sources
-    let playlist = [
-        { name: "🌀 CYBER DRIFT (city pop edit)", url: null, isBuiltin: true, dataUrl: null, sourceType: "builtin" },
-        { name: "🌆 NEON SUNSET - 2099", url: null, isBuiltin: true, dataUrl: null, sourceType: "builtin" },
-        { name: "💾 8BIT KASUMI SOUL", url: null, isBuiltin: true, dataUrl: null, sourceType: "builtin" }
-    ];
-    let urlSources = []; // { name, url, audioBuffer, dataUrl }
-    
-    // Helper: generate synth audio tones as placeholder audio data
-    async function generateToneBuffer(nameHint) {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const duration = 8;
-        const sampleRate = audioContext.sampleRate;
-        const length = duration * sampleRate;
-        const buffer = audioContext.createBuffer(2, length, sampleRate);
-        const left = buffer.getChannelData(0);
-        const right = buffer.getChannelData(1);
-        let baseFreq = 220;
-        if (nameHint.includes("DRIFT")) baseFreq = 174;
-        if (nameHint.includes("SUNSET")) baseFreq = 261;
-        if (nameHint.includes("KASUMI")) baseFreq = 329;
-        for (let i = 0; i < length; i++) {
-            let t = i / sampleRate;
-            let mod = Math.sin(t * 0.8) * 2;
-            let freq = baseFreq + mod * 20;
-            let sample = Math.sin(t * Math.PI * 2 * freq) * 0.6;
-            sample += Math.sin(t * Math.PI * 2 * (freq*1.5)) * 0.2;
-            sample *= Math.exp(-t * 0.5);
-            left[i] = sample;
-            right[i] = sample;
-        }
-        return buffer;
-    }
-    
-    async function initPlaylistWithAudio() {
-        for (let i=0; i<playlist.length; i++) {
-            if (!playlist[i].audioBuffer) {
-                const buffer = await generateToneBuffer(playlist[i].name);
-                playlist[i].audioBuffer = buffer;
-            }
-        }
-        renderPlaylist();
-        if (playlist.length) playSongByIndex(0);
-    }
-    
-    function renderPlaylist() {
-        const container = document.getElementById('playlistContainer');
-        container.innerHTML = '';
-        // show regular playlist
-        playlist.forEach((song, idx) => {
-            const div = document.createElement('div');
-            div.className = 'playlist-item';
-            div.innerHTML = `<span>🎧 ${song.name}</span><span style="color:#0ff;">▶️</span>`;
-            div.onclick = () => playSongByIndex(idx);
-            container.appendChild(div);
-        });
-        // show URL sources as playlist items with special badge
-        urlSources.forEach((src, idx) => {
-            const div = document.createElement('div');
-            div.className = 'playlist-item';
-            div.style.borderLeftColor = "#ff66cc";
-            div.innerHTML = `<span>🌐 ${src.name}</span><span style="color:#ff66cc;">🔊</span>`;
-            div.onclick = () => playUrlSource(idx);
-            container.appendChild(div);
-        });
-    }
-    
-    async function loadUrlAudio(url, name) {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        try {
-            const response = await fetch(url, { mode: 'cors' });
-            const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-            return audioBuffer;
-        } catch (err) {
-            console.warn("Failed to load url, fallback to tone", err);
-            return await generateToneBuffer(name);
-        }
-    }
-    
-    async function addUrlSource(url, customName = null) {
-        if (!url || url.trim() === "") return;
-        const name = customName || url.split('/').pop() || "remote stream";
-        const audioBuffer = await loadUrlAudio(url, name);
-        const newSource = {
-            name: name,
-            url: url,
-            audioBuffer: audioBuffer,
-            sourceType: "url"
-        };
-        urlSources.push(newSource);
-        renderPlaylist();
-        // auto play this new source
-        playUrlSource(urlSources.length - 1);
-    }
-    
-    async function playUrlSource(index) {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioSource) {
-            try { audioSource.stop(); } catch(e) {}
-            audioSource.disconnect();
-        }
-        const src = urlSources[index];
-        currentAudioBuffer = src.audioBuffer;
-        currentSongName = src.name;
-        document.getElementById('nowPlayingTitle').innerText = src.name;
-        document.getElementById('currentSongStat').innerText = src.name.substring(0,20);
-        document.getElementById('previewTrack').innerHTML = src.name;
-        document.getElementById('streamSourceDisplay').innerHTML = `📡 source: URL stream · ${src.url.substring(0,40)}`;
-        startPlayback();
-    }
-    
-    async function playSongByIndex(index) {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioSource) {
-            try { audioSource.stop(); } catch(e) {}
-            audioSource.disconnect();
-        }
-        const song = playlist[index];
-        let audioBuffer = song.audioBuffer;
-        if (!audioBuffer) {
-            if (song.dataUrl && song.dataUrl.startsWith('blob:')) {
-                const resp = await fetch(song.dataUrl);
-                const arrayBuf = await resp.arrayBuffer();
-                audioBuffer = await audioContext.decodeAudioData(arrayBuf);
-                song.audioBuffer = audioBuffer;
-            } else {
-                audioBuffer = await generateToneBuffer(song.name);
-                song.audioBuffer = audioBuffer;
-            }
-        }
-        currentAudioBuffer = audioBuffer;
-        currentSongName = song.name;
-        document.getElementById('nowPlayingTitle').innerText = song.name;
-        document.getElementById('currentSongStat').innerText = song.name.substring(0,20);
-        document.getElementById('previewTrack').innerHTML = song.name;
-        document.getElementById('streamSourceDisplay').innerHTML = `📡 source: local playlist · ${song.name}`;
-        startPlayback();
-    }
-    
-    function startPlayback() {
-        if (!audioContext || !currentAudioBuffer) return;
-        if (audioSource) {
-            try { audioSource.stop(); } catch(e) {}
-        }
-        audioSource = audioContext.createBufferSource();
-        audioSource.buffer = currentAudioBuffer;
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
-        audioSource.connect(analyser);
-        analyser.connect(audioContext.destination);
-        audioSource.loop = loopEnabled;
-        audioSource.onended = () => {
-            if (!loopEnabled && isStreamingActive) {
-                // auto next in playlist or url sources
-                let allSources = [...playlist.map(p=>({...p, isUrl:false})), ...urlSources.map(u=>({...u, isUrl:true}))];
-                let currentIdx = allSources.findIndex(s => s.name === currentSongName);
-                let next = (currentIdx+1) % allSources.length;
-                if (allSources[next].isUrl) {
-                    let urlIdx = urlSources.findIndex(u => u.name === allSources[next].name);
-                    if(urlIdx>=0) playUrlSource(urlIdx);
-                } else {
-                    let plIdx = playlist.findIndex(p => p.name === allSources[next].name);
-                    if(plIdx>=0) playSongByIndex(plIdx);
-                }
-            }
-        };
-        audioSource.start();
-        isPlaying = true;
-        if (animationId) cancelAnimationFrame(animationId);
-        startVisualizerLoop(analyser);
-        if (audioContext.state === 'suspended' && isStreamingActive) {
-            audioContext.resume();
-        } else if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-    }
-    
-    function startVisualizerLoop(analyserNode) {
-        const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
-        function draw() {
-            if (!analyserNode) return;
-            analyserNode.getByteFrequencyData(dataArray);
-            drawVisualizer(dataArray, analyserNode.frequencyBinCount);
-            animationId = requestAnimationFrame(draw);
-        }
-        draw();
-    }
-    
-    function drawVisualizer(freqData, binCount) {
-        if (!ctx) return;
-        const w = canvas.clientWidth;
-        const h = canvas.clientHeight;
-        canvas.width = w;
-        canvas.height = h;
-        ctx.clearRect(0, 0, w, h);
-        if (currentVisualMode === 'bars') {
-            drawBarsMode(freqData, binCount, w, h);
-        } else {
-            drawRorschachMode(freqData, binCount, w, h);
-        }
-        ctx.fillStyle = 'rgba(0,0,0,0.08)';
-        ctx.fillRect(0,0,w,h);
-    }
-    
-    function drawBarsMode(data, binCount, w, h) {
-        const barWidth = w / (binCount * 0.8);
-        let x = 0;
-        for (let i = 0; i < binCount; i++) {
-            const val = data[i] / 255;
-            const barHeight = val * h * 0.9;
-            const hue = 180 + val * 80;
-            ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = '#0ff';
-            ctx.fillRect(x, h - barHeight, barWidth - 1, barHeight);
-            ctx.fillStyle = `rgba(0, 255, 255, 0.3)`;
-            ctx.fillRect(x, h - barHeight - 2, barWidth - 1, 4);
-            x += barWidth;
-        }
-        ctx.shadowBlur = 0;
-        const avg = data.slice(0,12).reduce((a,b)=>a+b,0)/12;
-        if(avg > 180) {
-            ctx.fillStyle = `rgba(0, 255, 180, 0.2)`;
-            ctx.fillRect(0,0,w,h);
-        }
-    }
-    
-    function drawRorschachMode(data, binCount, w, h) {
-        const centerX = w/2;
-        const centerY = h/2;
-        const maxRadius = Math.min(w,h)*0.45;
-        for (let i = 0; i < binCount; i++) {
-            const val = data[i]/255;
-            const angle = (i / binCount) * Math.PI * 2;
-            const radius = 10 + val * maxRadius;
-            const x1 = centerX + Math.cos(angle) * radius;
-            const y1 = centerY + Math.sin(angle) * radius;
-            const x2 = centerX + Math.cos(angle + Math.PI) * radius;
-            const y2 = centerY + Math.sin(angle + Math.PI) * radius;
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.lineTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.fillStyle = `hsla(${180 + val * 180}, 90%, 55%, ${0.5+val*0.4})`;
-            ctx.fill();
-            ctx.shadowBlur = 16;
-            ctx.shadowColor = '#f0f';
-            ctx.beginPath();
-            ctx.arc(x1, y1, 3+val*8, 0, Math.PI*2);
-            ctx.fillStyle = `cyan`;
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(x2, y2, 3+val*8, 0, Math.PI*2);
-            ctx.fill();
-        }
-        for(let s=0; s<6; s++) {
-            let rad = (Date.now() * 0.003 + s) % (Math.PI*2);
-            let intensity = (data[8] / 255) * 20;
-            ctx.beginPath();
-            ctx.ellipse(centerX+Math.sin(rad)*intensity, centerY+Math.cos(rad)*intensity, 12+intensity, 8+intensity, 0,0,Math.PI*2);
-            ctx.fillStyle = `rgba(255,80,200,0.3)`;
-            ctx.fill();
-        }
-        ctx.shadowBlur = 0;
-    }
-    
-    // Upload & playlist addition
-    document.getElementById('songUpload').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const url = URL.createObjectURL(file);
-        const newSong = { name: file.name, url: url, dataUrl: url, audioBuffer: null, sourceType: "upload" };
-        playlist.push(newSong);
-        if (audioContext) {
-            const arrayBuf = await file.arrayBuffer();
-            const decoded = await audioContext.decodeAudioData(arrayBuf);
-            newSong.audioBuffer = decoded;
-        }
-        renderPlaylist();
-        playSongByIndex(playlist.length-1);
-    });
-    
-    // Add URL button
-    document.getElementById('addUrlBtn').addEventListener('click', () => {
-        const urlInput = document.getElementById('musicUrlInput');
-        const rawUrl = urlInput.value.trim();
-        if (rawUrl) {
-            addUrlSource(rawUrl);
-            urlInput.value = '';
-        }
-    });
-    
-    // Loop toggle
-    const loopBtn = document.getElementById('loopToggleBtn');
-    loopBtn.addEventListener('click', () => {
-        loopEnabled = !loopEnabled;
-        loopBtn.innerText = `LOOP: ${loopEnabled ? 'ON' : 'OFF'}`;
-        if (audioSource) audioSource.loop = loopEnabled;
-    });
-    
-    // Mode switch
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            currentVisualMode = e.target.dataset.mode;
-            document.getElementById('vizModeLabel').innerText = currentVisualMode === 'bars' ? 'BAR MODE' : 'RORSCHACH MODE';
-            document.getElementById('vizHint').innerText = currentVisualMode === 'bars' ? 'neon bars // bass reactive' : 'inkblot fractal mirror';
-        });
-    });
-    
-    // STREAM ON BUTTON LOGIC
-    const streamOnBtn = document.getElementById('streamOnBtn');
-    streamOnBtn.addEventListener('click', async () => {
-        if (!isStreamingActive) {
-            isStreamingActive = true;
-            streamOnBtn.innerText = '🔴 STREAMING ACTIVE // CLICK TO OFF';
-            streamOnBtn.classList.add('streaming-active');
-            document.getElementById('streamActiveStat').innerHTML = 'ON AIR';
-            document.getElementById('streamStatusText').innerHTML = 'LIVE // BROADCASTING TO RTMP';
-            if (audioContext && audioContext.state === 'suspended') {
-                await audioContext.resume();
-            } else if (!audioContext || !currentAudioBuffer) {
-                if(playlist.length) playSongByIndex(0);
-            } else if (audioSource && !isPlaying) {
-                startPlayback();
-            }
-        } else {
-            isStreamingActive = false;
-            streamOnBtn.innerText = '🔴 STREAM ON // ACTIVATE BROADCAST';
-            streamOnBtn.classList.remove('streaming-active');
-            document.getElementById('streamActiveStat').innerHTML = 'OFF';
-            document.getElementById('streamStatusText').innerHTML = 'STREAM PAUSED / STANDBY';
-            if (audioSource) {
-                try { audioSource.stop(); } catch(e) {}
-                isPlaying = false;
-            }
-        }
-    });
-    
-    // Stream title editor preview
-    const streamTitleInput = document.getElementById('streamTitleEdit');
-    const previewTitleSpan = document.getElementById('previewTitle');
-    streamTitleInput.addEventListener('input', () => {
-        previewTitleSpan.innerText = streamTitleInput.value;
-    });
-    
-    // System stats simulation
-    let startTime = Date.now();
-    setInterval(() => {
-        let cpu = 12 + Math.sin(Date.now() * 0.001) * 15 + (Math.random() * 8);
-        document.getElementById('cpuStat').innerText = Math.floor(cpu) + '%';
-        let bit = 2800 + Math.random() * 1500;
-        document.getElementById('bitrateStat').innerText = Math.floor(bit) + ' kbps';
-        const elapsed = Math.floor((Date.now() - startTime)/1000);
-        const hrs = String(Math.floor(elapsed/3600)).padStart(2,'0');
-        const mins = String(Math.floor((elapsed%3600)/60)).padStart(2,'0');
-        const secs = String(elapsed%60).padStart(2,'0');
-        document.getElementById('uptimeStat').innerText = `${hrs}:${mins}:${secs}`;
-        let rtmpHealth = Math.random() > 0.98 ? "RECONNECT" : "STABLE";
-        if(rtmpHealth === "RECONNECT") {
-            document.getElementById('rtmpHealthText').innerText = "⚠️ RECONNECTING..";
-            document.getElementById('rtmpHealthLed').style.background = "orange";
-        } else {
-            document.getElementById('rtmpHealthText').innerText = "HEALTHY • AUTO-RECONNECT";
-            document.getElementById('rtmpHealthLed').style.background = "#0f0";
-        }
-    }, 1800);
-    
-    // Emergency restart
-    const emergencyBtn = document.getElementById('emergencyRestartBtn');
-    emergencyBtn.addEventListener('click', async () => {
-        if (audioContext) {
-            await audioContext.close();
-        }
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        if (currentAudioBuffer && isStreamingActive) {
-            startPlayback();
-        } else if(playlist.length) {
-            playSongByIndex(0);
-        }
-        document.getElementById('streamStatusText').innerHTML = "RESTARTED // FFMPEG DAEMON OK";
-        setTimeout(()=>{ if(isStreamingActive) document.getElementById('streamStatusText').innerHTML="LIVE / TRANSMITTING"; else document.getElementById('streamStatusText').innerHTML="STREAM PAUSED / STANDBY"; }, 1500);
-    });
-    
-    // Live preview update
-    setInterval(() => {
-        const rtmpKey = document.getElementById('rtmpKeyInput').value.slice(0, 30);
-        document.getElementById('livePreviewMock').innerHTML = `🔴 [GIT RADIO] stream: ${streamTitleInput.value}<br>🎵 current track: ${currentSongName} | rtmp: ${rtmpKey}...<br>⚡ DOCKER VPS • ${isStreamingActive ? 'LIVE' : 'STANDBY'} MODE`;
-        document.getElementById('previewTrack').innerHTML = currentSongName;
-    }, 1500);
-    
-    // Init
-    initPlaylistWithAudio();
-    document.getElementById('vizModeLabel').innerText = "BAR MODE";
-    document.getElementById('streamActiveStat').innerHTML = "OFF";
+// ── PLAYLIST — each track hardcoded with its exact raw GitHub URL ─────────────
+// ── STATE ────────────────────────────────────────────────────────────────────
+let audioCtx = null, gainNode = null, analyser = null, sourceNode = null;
+let buffers = {};           // url -> AudioBuffer
+let playlist = [
+  {
+    name: "AVATAR - Eywa (fan music)",
+    url:  "https://raw.githubusercontent.com/yerrysreview-afk/gitradio/main/AVATAR%20-%20Eywa%20%28fan%20music%29.MP3",
+    src:  "github"
+  },
+  {
+    name: "BOOSTER",
+    url:  "https://raw.githubusercontent.com/yerrysreview-afk/gitradio/main/BOOSTER.MP3",
+    src:  "github"
+  },
+  {
+    name: "Before Minight",
+    url:  "https://raw.githubusercontent.com/yerrysreview-afk/gitradio/main/Before%20Minight.MP3",
+    src:  "github"
+  },
+  {
+    name: "Borderline",
+    url:  "https://raw.githubusercontent.com/yerrysreview-afk/gitradio/main/Borderline.MP3",
+    src:  "github"
+  },
+  {
+    name: "Goal Golazo",
+    url:  "https://raw.githubusercontent.com/yerrysreview-afk/gitradio/main/Goal%20Golazo.MP3",
+    src:  "github"
+  }
+];
+let currentIdx = 0;
+let isPlaying = false, isPaused = false, isStreaming = false;
+let loopEnabled = false, shuffleEnabled = false;
+let vizMode = 'bars';
+let animId = null;
+let trackStartedAt = 0, pauseOffset = 0;
+let startTime = Date.now();
+
+// ── AUDIO CONTEXT ────────────────────────────────────────────────────────────
+function ensureCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = parseFloat(document.getElementById('volSlider').value);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    gainNode.connect(analyser);
+    gainNode.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// ── LOAD TRACK ───────────────────────────────────────────────────────────────
+async function loadTrack(track) {
+  if (buffers[track.url]) return buffers[track.url];
+  markTrack(track.url, 'loading');
+  try {
+    const resp = await fetch(track.url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const ab = await resp.arrayBuffer();
+    ensureCtx();
+    const buf = await audioCtx.decodeAudioData(ab);
+    buffers[track.url] = buf;
+    markTrack(track.url, 'ready');
+    return buf;
+  } catch(e) {
+    markTrack(track.url, 'error');
+    console.error('Failed to load', track.name, e);
+    return null;
+  }
+}
+
+async function preloadAll() {
+  renderPlaylist();
+  let loaded = 0;
+  for (const t of playlist) {
+    await loadTrack(t);
+    loaded++;
+    document.getElementById('repoStatus').innerHTML =
+      `📡 repo: yerrysreview-afk/gitradio · branch: main<br>` +
+      `🔄 loading… ${loaded}/${playlist.length} tracks · ${t.name}`;
+    renderPlaylist();
+  }
+  document.getElementById('repoStatus').innerHTML =
+    `✅ yerrysreview-afk/gitradio@main · ${playlist.length} tracks ready<br>` +
+    `🎧 click any track or hit STREAM ON to broadcast`;
+  // auto play first
+  playTrack(0);
+}
+
+// ── PLAY ─────────────────────────────────────────────────────────────────────
+async function playTrack(idx, offset) {
+  offset = offset || 0;
+  currentIdx = idx;
+  const track = playlist[idx];
+  ensureCtx();
+
+  if (sourceNode) { try { sourceNode.stop(); } catch(e){} sourceNode.disconnect(); }
+
+  let buf = buffers[track.url];
+  if (!buf) { buf = await loadTrack(track); }
+  if (!buf) { nextTrack(); return; }
+
+  sourceNode = audioCtx.createBufferSource();
+  sourceNode.buffer = buf;
+  sourceNode.connect(gainNode);
+  sourceNode.loop = loopEnabled;
+  sourceNode.onended = () => { if (!loopEnabled && !isPaused) nextTrack(); };
+  sourceNode.start(0, offset);
+  trackStartedAt = audioCtx.currentTime - offset;
+  pauseOffset = 0;
+  isPlaying = true; isPaused = false;
+
+  const nice = track.name.replace(/\.MP3$/i,'');
+  document.getElementById('nowTitle').textContent = nice;
+  document.getElementById('songStat').textContent = nice.substring(0, 22);
+  document.getElementById('ppBtn').textContent = '⏸';
+  renderPlaylist();
+  updatePreview();
+  if (!animId) startViz();
+}
+
+function togglePP() {
+  ensureCtx();
+  if (!isPlaying && !isPaused) { playTrack(currentIdx); return; }
+  if (isPlaying) {
+    pauseOffset = audioCtx.currentTime - trackStartedAt;
+    try { sourceNode.stop(); } catch(e){}
+    isPlaying = false; isPaused = true;
+    document.getElementById('ppBtn').textContent = '▶';
+  } else {
+    isPaused = false;
+    playTrack(currentIdx, pauseOffset);
+  }
+}
+
+function prevTrack() {
+  ensureCtx();
+  const idx = shuffleEnabled
+    ? Math.floor(Math.random()*playlist.length)
+    : (currentIdx - 1 + playlist.length) % playlist.length;
+  playTrack(idx);
+}
+
+function nextTrack() {
+  ensureCtx();
+  const idx = shuffleEnabled
+    ? Math.floor(Math.random()*playlist.length)
+    : (currentIdx + 1) % playlist.length;
+  playTrack(idx);
+}
+
+// ── STREAM BUTTON ─────────────────────────────────────────────────────────────
+function toggleStream() {
+  ensureCtx();
+  isStreaming = !isStreaming;
+  const btn = document.getElementById('streamBtn');
+  if (isStreaming) {
+    btn.textContent = '🔴 STREAMING ACTIVE // CLICK TO STOP';
+    btn.classList.add('on');
+    document.getElementById('streamStat').textContent = 'ON AIR';
+    document.getElementById('streamStatusTxt').textContent = 'LIVE // BROADCASTING TO RTMP';
+    setLed('streamLed','r'); setLed('streamLed2','r');
+    if (!isPlaying && !isPaused) playTrack(currentIdx);
+  } else {
+    btn.textContent = '🔴 STREAM ON // ACTIVATE BROADCAST';
+    btn.classList.remove('on');
+    document.getElementById('streamStat').textContent = 'OFF';
+    document.getElementById('streamStatusTxt').textContent = 'STANDBY — PRESS STREAM ON';
+    setLed('streamLed','off'); setLed('streamLed2','off');
+  }
+  updatePreview();
+}
+
+function setLed(id, s) {
+  const el = document.getElementById(id);
+  if (el) el.className = 'led ' + (s==='r'?'r':s==='g'?'g':s==='y'?'y':'off');
+}
+
+// ── VOLUME ────────────────────────────────────────────────────────────────────
+function setVol(v) {
+  if (gainNode) gainNode.gain.value = parseFloat(v);
+  document.getElementById('volPct').textContent = Math.round(v*100) + '%';
+}
+
+// ── LOOP / SHUFFLE ────────────────────────────────────────────────────────────
+function toggleLoop() {
+  loopEnabled = !loopEnabled;
+  if (sourceNode) sourceNode.loop = loopEnabled;
+  const btn = document.getElementById('loopBtn');
+  btn.textContent = '🔁 LOOP: ' + (loopEnabled?'ON':'OFF');
+  btn.classList.toggle('on', loopEnabled);
+}
+function toggleShuffle() {
+  shuffleEnabled = !shuffleEnabled;
+  const btn = document.getElementById('shuffleBtn');
+  btn.textContent = '🔀 SHUFFLE: ' + (shuffleEnabled?'ON':'OFF');
+  btn.classList.toggle('on', shuffleEnabled);
+}
+
+// ── EXTRA URL ─────────────────────────────────────────────────────────────────
+function addExtraUrl() {
+  const inp = document.getElementById('extraUrl');
+  const url = inp.value.trim();
+  if (!url) return;
+  const name = url.split('/').pop() || 'remote track';
+  playlist.push({ name, url, src:'url' });
+  inp.value = '';
+  renderPlaylist();
+  playTrack(playlist.length-1);
+}
+
+// ── RENDER PLAYLIST ───────────────────────────────────────────────────────────
+function markTrack(url, state) {
+  const el = document.querySelector(`[data-trk-url="${url}"]`);
+  if (!el) return;
+  const badge = el.querySelector('.tbadge');
+  el.classList.remove('trk-loading','trk-error');
+  if (state==='loading') { el.classList.add('trk-loading'); if(badge){badge.textContent='LOADING';badge.className='tbadge bload';} }
+  else if (state==='error') { el.classList.add('trk-error'); if(badge){badge.textContent='ERR';badge.className='tbadge berr';} }
+  else if (state==='ready') { if(badge){badge.textContent='READY';badge.className='tbadge';} }
+}
+
+function renderPlaylist() {
+  const el = document.getElementById('playlistEl');
+  el.innerHTML = '';
+  playlist.forEach((t, i) => {
+    const active = i === currentIdx;
+    const hasBuffer = !!buffers[t.url];
+    let bText = hasBuffer ? (active && isPlaying ? '▶ NOW' : 'READY') : 'FETCH…';
+    let bClass = 'tbadge' + (active && isPlaying ? ' bplay' : !hasBuffer ? ' bload' : '');
+    const urlBadge = t.src==='url' ? '<span class="tbadge burl">URL</span> ' : '';
+
+    const div = document.createElement('div');
+    div.className = 'track' + (active?' active':'') + (!hasBuffer?' trk-loading':'');
+    div.setAttribute('data-trk-url', t.url);
+    div.innerHTML =
+      `<span class="tnum">${i+1}</span>` +
+      `<span class="tname">${urlBadge}${t.name.replace(/\.MP3$/i,'')}</span>` +
+      `<span class="${bClass}">${bText}</span>`;
+    div.onclick = () => { ensureCtx(); playTrack(i); };
+    el.appendChild(div);
+  });
+}
+
+// ── VISUALIZER ────────────────────────────────────────────────────────────────
+const cvs = document.getElementById('cvs');
+const c = cvs.getContext('2d');
+
+function setMode(m) {
+  vizMode = m;
+  document.querySelectorAll('.modebtn').forEach(b=>b.classList.remove('active'));
+  const map = {bars:'btnBars',rorschach:'btnRor',wave:'btnWave'};
+  if (map[m]) document.getElementById(map[m]).classList.add('active');
+  const hints = {bars:'neon bars · bass reactive',rorschach:'inkblot fractal mirror',wave:'oscilloscope · dual'};
+  document.getElementById('vizHint').textContent = hints[m]||m;
+  document.getElementById('vizLabel').textContent = m.toUpperCase();
+}
+
+function startViz() {
+  const freq = new Uint8Array(analyser ? analyser.frequencyBinCount : 128);
+  const time = new Uint8Array(analyser ? analyser.fftSize : 512);
+  function draw() {
+    animId = requestAnimationFrame(draw);
+    const W = cvs.clientWidth, H = cvs.clientHeight;
+    if (cvs.width!==W) cvs.width=W;
+    if (cvs.height!==H) cvs.height=H;
+    if (analyser) { analyser.getByteFrequencyData(freq); analyser.getByteTimeDomainData(time); }
+    c.clearRect(0,0,W,H);
+    c.fillStyle='rgba(0,5,10,0.55)'; c.fillRect(0,0,W,H);
+    if (vizMode==='bars') drawBars(freq,W,H);
+    else if (vizMode==='rorschach') drawRorschach(freq,W,H);
+    else drawWave(time,W,H);
+  }
+  draw();
+}
+
+function drawBars(data,W,H) {
+  const n=data.length, bw=W/(n*0.75);
+  let x=0;
+  for (let i=0;i<n;i++) {
+    const v=data[i]/255, bh=v*H*0.92, hue=170+v*100;
+    c.fillStyle=`hsl(${hue},100%,${50+v*20}%)`;
+    c.shadowBlur=8; c.shadowColor='#0ff';
+    c.fillRect(x,H-bh,bw-1.5,bh);
+    c.fillStyle='rgba(0,255,255,0.35)';
+    c.fillRect(x,H-bh-2,bw-1.5,3);
+    x+=bw;
+  }
+  c.shadowBlur=0;
+  const avg=Array.from(data.slice(0,8)).reduce((a,b)=>a+b,0)/8;
+  if(avg>200){c.fillStyle='rgba(0,255,200,0.05)';c.fillRect(0,0,W,H);}
+}
+
+function drawRorschach(data,W,H) {
+  const cx=W/2,cy=H/2,maxR=Math.min(W,H)*0.44;
+  for (let i=0;i<data.length;i++) {
+    const v=data[i]/255, ang=(i/data.length)*Math.PI*2, r=8+v*maxR;
+    const x1=cx+Math.cos(ang)*r, y1=cy+Math.sin(ang)*r;
+    const x2=cx+Math.cos(ang+Math.PI)*r, y2=cy+Math.sin(ang+Math.PI)*r;
+    c.beginPath(); c.moveTo(cx,cy); c.lineTo(x1,y1); c.lineTo(x2,y2);
+    c.fillStyle=`hsla(${180+v*180},85%,55%,${0.4+v*0.45})`; c.fill();
+    c.shadowBlur=12; c.shadowColor='#f0f';
+    c.beginPath(); c.arc(x1,y1,2+v*6,0,Math.PI*2); c.fillStyle='#0ff'; c.fill();
+    c.beginPath(); c.arc(x2,y2,2+v*6,0,Math.PI*2); c.fill();
+  }
+  c.shadowBlur=0;
+}
+
+function drawWave(data,W,H) {
+  const sw=W/data.length;
+  c.beginPath(); c.strokeStyle='#0ff'; c.lineWidth=2; c.shadowBlur=10; c.shadowColor='#0ff';
+  for (let i=0;i<data.length;i++) {
+    const y=(data[i]/128-1)*(H/2)+H/2;
+    i===0?c.moveTo(0,y):c.lineTo(i*sw,y);
+  }
+  c.stroke();
+  c.beginPath(); c.strokeStyle='rgba(255,102,204,0.45)'; c.lineWidth=1; c.shadowBlur=0;
+  for (let i=0;i<data.length;i++) {
+    const y=H-((data[i]/128-1)*(H/2)+H/2);
+    i===0?c.moveTo(0,y):c.lineTo(i*sw,y);
+  }
+  c.stroke();
+}
+
+// ── SYS STATS ─────────────────────────────────────────────────────────────────
+setInterval(()=>{
+  document.getElementById('cpuS').textContent = Math.floor(12+Math.sin(Date.now()*0.001)*12+Math.random()*6)+'%';
+  document.getElementById('bitS').textContent = Math.floor(2800+Math.random()*1400)+' kbps';
+  const e=Math.floor((Date.now()-startTime)/1000);
+  document.getElementById('upS').textContent =
+    String(Math.floor(e/3600)).padStart(2,'0')+':'+
+    String(Math.floor((e%3600)/60)).padStart(2,'0')+':'+
+    String(e%60).padStart(2,'0');
+  if (Math.random()>0.97) {
+    document.getElementById('rtmpHealthTxt').textContent='⚠ RECONNECTING…';
+    document.getElementById('rtmpLed').className='led y';
+    setTimeout(()=>{
+      document.getElementById('rtmpHealthTxt').textContent='HEALTHY · AUTO-RECONNECT';
+      document.getElementById('rtmpLed').className='led g';
+    },2200);
+  }
+},1800);
+
+// ── PREVIEW ───────────────────────────────────────────────────────────────────
+function updatePreview() {
+  const title = document.getElementById('streamTitle').value;
+  const rtmp = document.getElementById('rtmpKey').value.slice(0,32);
+  const track = playlist[currentIdx]?.name.replace(/\.MP3$/i,'')||'---';
+  const liveTag = isStreaming ? '<span style="color:#0f0">LIVE</span>' : 'STANDBY';
+  document.getElementById('previewBox').innerHTML =
+    `🔴 [GIT RADIO] ${title}<br>🎵 ${track}<br>📡 rtmp: ${rtmp}…<br>⚡ DOCKER VPS · ${liveTag}`;
+}
+setInterval(updatePreview, 2000);
+
+// ── EMERGENCY ─────────────────────────────────────────────────────────────────
+async function emergencyRestart() {
+  if (sourceNode) { try{sourceNode.stop();}catch(e){} }
+  if (audioCtx) { await audioCtx.close(); }
+  audioCtx=null; gainNode=null; analyser=null; sourceNode=null;
+  isPlaying=false; isPaused=false; animId=null; buffers={};
+  document.getElementById('streamStatusTxt').textContent='RESTARTED // FFMPEG DAEMON OK';
+  document.getElementById('nowTitle').textContent='~ restarting daemon ~';
+  setTimeout(()=>{
+    preloadAll();
+  },800);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+startViz();
+preloadAll();
+updatePreview();
 </script>
 </body>
 </html>
